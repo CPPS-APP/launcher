@@ -1,0 +1,14 @@
+{
+  "name": "CPPSAPP",
+  "version": "1.0.1",
+  "description": "CPPS.APP Desktop Client",
+  "main": "main.js",
+  "homepage": "https://cpps.app/",
+  "author": "CPPSAPP",
+  "license": "CC0-1.0",
+  "dependencies": {
+    "discord-rpc": "^3.1.0",
+    "electron-is-dev": "^1.1.0",
+    "electron-updater": "^4.2.0"
+  }
+}
