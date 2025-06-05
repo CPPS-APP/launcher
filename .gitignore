@@ -14,6 +14,9 @@
 .idea/misc.xml
 .idea/vcs.xml
 .idea/inspectionProfiles/
+.idea/.gitignore
+.idea/modules.xml
+.idea/launcher.iml
 
 # AWS User-specific
 .idea/**/aws.xml
