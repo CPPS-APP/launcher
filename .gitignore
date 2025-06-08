@@ -17,6 +17,7 @@
 .idea/.gitignore
 .idea/modules.xml
 .idea/launcher.iml
+.idea/ruff.xml
 
 # AWS User-specific
 .idea/**/aws.xml
