@@ -32,9 +32,9 @@ jobs:
 
       - name: Install dependencies on macOS (force x64)
         if: matrix.os == 'macos-latest'
-        run: |
-          npm config set arch=x64
-          npm ci
+        env:
+          npm_config_arch: x64
+        run: npm ci
 
       - name: Install dependencies on Windows/Linux
         if: matrix.os != 'macos-latest'
