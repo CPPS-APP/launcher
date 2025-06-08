@@ -1,5 +1,5 @@
 {
-  "name": "CPPSAPP",
+  "name": "CPPS.APP",
   "version": "1.1.0",
   "description": "CPPS.APP Desktop Client",
   "main": "main.js",
@@ -11,10 +11,10 @@
     "appveyor-build": "electron-builder build --win --publish onTagOrDraft"
   },
   "homepage": "https://cpps.app/",
-  "author": "CPPSAPP <support@cpps.app>",
+  "author": "CPPS.APP <support@cpps.app>",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^7.3.3",
+    "electron": "^11.5.0",
     "electron-builder": "^23.6.0",
     "electron-is-dev": "^1.1.0"
   },
@@ -28,8 +28,8 @@
   },
   "build": {
     "appId": "com.cppsapp.desktop",
-    "productName": "CPPSAPP Desktop",
-    "asar": "true",
+    "productName": "CPPS.APP Desktop",
+    "asar": "false",
     "directories": {
       "buildResources": "build/icons"
     },
