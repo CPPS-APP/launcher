@@ -54,15 +54,13 @@ function makeMenu() {
         label: 'На полный экран',
         accelerator: 'F11',
         click: () => {
-            let fsbool = (mainWindow.isFullScreen() ? false : true);
-            mainWindow.setFullScreen(fsbool);
+            mainWindow.setFullScreen(!mainWindow.isFullScreen());
         }
     }));
     fsmenu.append(new MenuItem({
         label: 'Отключить/включить звук',
         click: () => {
-            let ambool = (mainWindow.webContents.audioMuted ? false : true);
-            mainWindow.webContents.audioMuted = ambool;
+            mainWindow.webContents.audioMuted = (!mainWindow.webContents.audioMuted);
         }
     }));
     fsmenu.append(new MenuItem({
@@ -117,12 +115,15 @@ function createWindow() {
         icon: __dirname + '/build/icon.png',
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            plugins: true
+            plugins: true,
+            contextIsolation: true,
+            nodeIntegration: false,
+            devTools: isDev
         }
     });
 
     mainWindow.setMenu(null);
-    mainWindow.loadURL('https://play.cpps.app/#/login');
+    mainWindow.loadURL('https://play.cpps.app/');
 
     const clientId = '1098494702644383766';
     DiscordRPC.register(clientId);
