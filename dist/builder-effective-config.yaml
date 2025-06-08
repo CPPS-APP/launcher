@@ -1,7 +1,0 @@
-directories:
-  output: dist
-  buildResources: build
-appId: com.cppsapp.desktop
-productName: CPPSAPP Desktop
-asar: false
-electronVersion: 6.1.7

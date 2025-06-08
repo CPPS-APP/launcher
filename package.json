@@ -1,30 +1,51 @@
 {
-  "name": "CPPSAPP",
-  "version": "1.0.1",
+  "name": "CPPS.APP",
+  "version": "1.1.0",
   "description": "CPPS.APP Desktop Client",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder build --win --publish never",
     "build-mac": "electron-builder build --mac --publish never",
+    "build-linux": "electron-builder build --linux --publish never",
     "appveyor-build": "electron-builder build --win --publish onTagOrDraft"
   },
   "homepage": "https://cpps.app/",
-  "author": "CPPSAPP",
+  "author": "CPPS.APP <support@cpps.app>",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^6.1.7",
-    "electron-builder": "^22.2.0",
+    "electron": "^11.5.0",
+    "electron-builder": "^23.6.0",
     "electron-is-dev": "^1.1.0"
   },
   "dependencies": {
+    "@electron/asar": "^3.4.1",
+    "@electron/osx-sign": "^1.3.3",
     "discord-rpc": "^3.1.0",
+    "electron-icon-maker": "^0.0.5",
     "electron-is-dev": "^1.1.0",
-    "electron-updater": "^4.2.0"
+    "electron-updater": "^6.6.2"
   },
   "build": {
     "appId": "com.cppsapp.desktop",
-    "productName": "CPPSAPP Desktop",
-    "asar": "false"
+    "productName": "CPPS.APP Desktop",
+    "asar": "false",
+    "directories": {
+      "buildResources": "build/icons"
+    },
+    "win": {
+      "icon": "win/icon.ico"
+    },
+    "mac": {
+      "icon": "mac/icon.icns"
+    },
+    "linux": {
+      "icon": "png",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Games"
+    }
   }
 }
