@@ -15,7 +15,7 @@ jobs:
         include:
           - os: windows-latest
             script: build
-          - os: macos-latest
+          - os: macos-13
             script: build-mac
           - os: ubuntu-latest
             script: build-linux
@@ -31,13 +31,15 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies on macOS (force x64)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13'
         env:
           npm_config_arch: x64
-        run: npm ci
+        run: |
+          arch -x86_64 brew install coreutils || true
+          arch -x86_64 npm ci
 
       - name: Install dependencies on Windows/Linux
-        if: matrix.os != 'macos-latest'
+        if: matrix.os != 'macos-13'
         run: npm ci
 
       - name: Build Electron App (${{ matrix.os }})
