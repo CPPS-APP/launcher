@@ -35,15 +35,22 @@ jobs:
         env:
           npm_config_arch: x64
         run: |
-          arch -x86_64 brew install coreutils || true
+          softwareupdate --install-rosetta --agree-to-license || true
           arch -x86_64 npm ci
+        shell: bash
 
       - name: Install dependencies on Windows/Linux
         if: matrix.os != 'macos-13'
         run: npm ci
 
       - name: Build Electron App (${{ matrix.os }})
-        run: npm run ${{ matrix.script }}
+        run: |
+          if [ "${{ matrix.os }}" == "macos-13" ]; then
+            npm run build-mac -- --x64
+          else
+            npm run ${{ matrix.script }}
+          fi
+        shell: bash
 
       - name: Upload build artifacts
         if: success()
