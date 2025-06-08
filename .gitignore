@@ -621,7 +621,6 @@ $RECYCLE.BIN/
 *.so
 
 # Distribution / packaging
-build/
 develop-eggs/
 dist/
 downloads/
