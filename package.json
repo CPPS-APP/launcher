@@ -7,10 +7,11 @@
     "start": "electron .",
     "build": "electron-builder build --win --publish never",
     "build-mac": "electron-builder build --mac --publish never",
+    "build-linux": "electron-builder build --linux --publish never",
     "appveyor-build": "electron-builder build --win --publish onTagOrDraft"
   },
   "homepage": "https://cpps.app/",
-  "author": "CPPSAPP",
+  "author": "CPPSAPP <support@cpps.app>",
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^7.3.3",
@@ -37,7 +38,12 @@
       "icon": "mac/icon.icns"
     },
     "linux": {
-      "icon": "png"
+      "icon": "png",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Games"
     }
   }
 }
