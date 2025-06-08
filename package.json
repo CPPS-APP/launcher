@@ -19,12 +19,25 @@
   },
   "dependencies": {
     "discord-rpc": "^3.1.0",
+    "electron-icon-maker": "^0.0.5",
     "electron-is-dev": "^1.1.0",
     "electron-updater": "^4.2.0"
   },
   "build": {
     "appId": "com.cppsapp.desktop",
     "productName": "CPPSAPP Desktop",
-    "asar": "false"
+    "asar": "false",
+    "directories": {
+      "buildResources": "build/icons"
+    },
+    "win": {
+      "icon": "win/icon.ico"
+    },
+    "mac": {
+      "icon": "mac/icon.icns"
+    },
+    "linux": {
+      "icon": "png"
+    }
   }
 }
