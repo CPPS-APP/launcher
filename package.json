@@ -27,7 +27,7 @@
   "build": {
     "appId": "com.cppsapp.desktop",
     "productName": "CPPSAPP Desktop",
-    "asar": "false",
+    "asar": "true",
     "directories": {
       "buildResources": "build/icons"
     },
