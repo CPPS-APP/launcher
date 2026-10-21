@@ -47,57 +47,83 @@ app.commandLine.appendSwitch('ppapi-flash-path', path.join(__dirname, pluginName
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 let fsmenu;
+let exitFullscreenMenuItem;
 
 function makeMenu() {
+    const isMac = process.platform === 'darwin';
+    const appSubmenu = [];
+
+    if (isMac) {
+        appSubmenu.push(
+            {role: 'about', label: 'О программе CPPS.APP'},
+            {type: 'separator'},
+            {role: 'services', label: 'Службы'},
+            {type: 'separator'},
+            {role: 'hide', label: 'Скрыть CPPS.APP'},
+            {role: 'hideOthers', label: 'Скрыть остальные'},
+            {role: 'unhide', label: 'Показать все'},
+            {type: 'separator'},
+            {role: 'quit', label: 'Выйти из CPPS.APP'},
+            {type: 'separator'}
+        );
+    }
+
+    appSubmenu.push(
+        {
+            label: 'На полный экран',
+            accelerator: 'F11',
+            click: () => {
+                if (mainWindow) mainWindow.setFullScreen(!mainWindow.isFullScreen());
+            }
+        },
+        {
+            label: 'Отключить/включить звук',
+            click: () => {
+                if (mainWindow) {
+                    const contents = mainWindow.webContents;
+                    contents.setAudioMuted(!contents.isAudioMuted());
+                }
+            }
+        },
+        {
+            label: 'Очистить кэш',
+            accelerator: 'CmdOrCtrl+D',
+            click: () => clearCache()
+        },
+        {
+            label: 'Обновить страницу',
+            accelerator: 'F5',
+            click: () => reloadPage()
+        },
+        {
+            label: 'Инструменты разработчика',
+            accelerator: 'F12',
+            click: () => {
+                if (mainWindow) mainWindow.webContents.toggleDevTools();
+            }
+        },
+        {
+            id: 'exit-fullscreen',
+            label: 'Выйти из полноэкранного режима',
+            accelerator: 'Escape',
+            visible: false,
+            click: () => {
+                if (mainWindow) mainWindow.setFullScreen(false);
+            }
+        }
+    );
+
+    if (!isMac) {
+        appSubmenu.push(
+            {type: 'separator'},
+            {role: 'quit', label: 'Выход'}
+        );
+    }
+
     const template = [
         {
             label: 'CPPS.APP',
-            submenu: [
-                {
-                    label: 'На полный экран',
-                    accelerator: 'F11',
-                    click: () => {
-                        if (mainWindow) mainWindow.setFullScreen(!mainWindow.isFullScreen());
-                    }
-                },
-                {
-                    label: 'Отключить/включить звук',
-                    click: () => {
-                        if (mainWindow) {
-                            const contents = mainWindow.webContents;
-                            contents.setAudioMuted(!contents.isAudioMuted());
-                        }
-                    }
-                },
-                {
-                    label: 'Очистить кэш',
-                    accelerator: 'CmdOrCtrl+D',
-                    click: () => clearCache()
-                },
-                {
-                    label: 'Обновить страницу',
-                    accelerator: 'F5',
-                    click: () => reloadPage()
-                },
-                {
-                    label: 'Инструменты разработчика',
-                    accelerator: 'F12',
-                    click: () => {
-                        if (mainWindow) mainWindow.webContents.toggleDevTools();
-                    }
-                },
-                {
-                    label: 'Выйти из полноэкранного режима',
-                    accelerator: 'Escape',
-                    visible: false,
-                    click: () => {
-                        if (mainWindow) {
-                            mainWindow.setFullScreen(false);
-                            mainWindow.setMenuBarVisibility(true);
-                        }
-                    }
-                }
-            ]
+            submenu: appSubmenu
         },
         {
             label: 'Правка',
@@ -113,7 +139,22 @@ function makeMenu() {
         }
     ];
 
+    if (isMac) {
+        template.push(
+            {
+                label: 'Окно',
+                submenu: [
+                    {role: 'minimize', label: 'Свернуть'},
+                    {role: 'zoom', label: 'Увеличить'},
+                    {type: 'separator'},
+                    {role: 'front', label: 'На передний план'}
+                ]
+            }
+        );
+    }
+
     fsmenu = Menu.buildFromTemplate(template);
+    exitFullscreenMenuItem = fsmenu.getMenuItemById('exit-fullscreen');
     Menu.setApplicationMenu(fsmenu);
 }
 
@@ -146,6 +187,13 @@ function createWindow() {
 
     mainWindow.setMenu(null);
     mainWindow.loadURL('https://play.cpps.app/');
+
+    mainWindow.on('enter-full-screen', () => {
+        if (exitFullscreenMenuItem) exitFullscreenMenuItem.visible = true;
+    });
+    mainWindow.on('leave-full-screen', () => {
+        if (exitFullscreenMenuItem) exitFullscreenMenuItem.visible = false;
+    });
 
     const clientId = '1098494702644383766';
     DiscordRPC.register(clientId);
