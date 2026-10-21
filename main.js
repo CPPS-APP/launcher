@@ -51,7 +51,7 @@ let adminWindow;
 let fsmenu;
 let exitFullscreenMenuItem;
 const productionSiteURL = 'https://play.cpps.app/';
-const localSiteURL = 'http://play.localhost/';
+const localSiteURL = 'https://play.localhost/';
 let activeSiteURL = productionSiteURL;
 let usingLocalSite = false;
 let showingLoadError = false;
