@@ -2,6 +2,12 @@ const {app, BrowserWindow, dialog, Menu, MenuItem, screen} = require('electron')
 const isDev = require('electron-is-dev');
 const isDeveloperBuild = process.env.CPPS_DEV_BUILD === '1' || require('./package.json').cppsAppBuild === 'developer';
 const ALLOW_INSECURE = isDeveloperBuild ? true : false;
+const insecureLocalHosts = new Set([
+    'localhost',
+    'media.localhost',
+    'play.localhost',
+    'secured.localhost'
+]);
 const {autoUpdater} = require('electron-updater');
 const DiscordRPC = require('discord-rpc');
 const fs = require('fs');
@@ -16,7 +22,7 @@ app.on('certificate-error', (event, webContents, url, _error, _certificate, call
         return;
     }
 
-    if (ALLOW_INSECURE && hostname === 'play.localhost') {
+    if (ALLOW_INSECURE && insecureLocalHosts.has(hostname)) {
         event.preventDefault();
         callback(true);
         return;
