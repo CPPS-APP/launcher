@@ -49,50 +49,72 @@ let mainWindow;
 let fsmenu;
 
 function makeMenu() {
-    fsmenu = new Menu();
-    fsmenu.append(new MenuItem({
-        label: 'На полный экран',
-        accelerator: 'F11',
-        click: () => {
-            mainWindow.setFullScreen(!mainWindow.isFullScreen());
+    const template = [
+        {
+            label: 'CPPS.APP',
+            submenu: [
+                {
+                    label: 'На полный экран',
+                    accelerator: 'F11',
+                    click: () => {
+                        if (mainWindow) mainWindow.setFullScreen(!mainWindow.isFullScreen());
+                    }
+                },
+                {
+                    label: 'Отключить/включить звук',
+                    click: () => {
+                        if (mainWindow) {
+                            const contents = mainWindow.webContents;
+                            contents.setAudioMuted(!contents.isAudioMuted());
+                        }
+                    }
+                },
+                {
+                    label: 'Очистить кэш',
+                    accelerator: 'CmdOrCtrl+D',
+                    click: () => clearCache()
+                },
+                {
+                    label: 'Обновить страницу',
+                    accelerator: 'F5',
+                    click: () => reloadPage()
+                },
+                {
+                    label: 'Инструменты разработчика',
+                    accelerator: 'F12',
+                    click: () => {
+                        if (mainWindow) mainWindow.webContents.toggleDevTools();
+                    }
+                },
+                {
+                    label: 'Выйти из полноэкранного режима',
+                    accelerator: 'Escape',
+                    visible: false,
+                    click: () => {
+                        if (mainWindow) {
+                            mainWindow.setFullScreen(false);
+                            mainWindow.setMenuBarVisibility(true);
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            label: 'Правка',
+            submenu: [
+                {role: 'undo', label: 'Отменить', accelerator: 'CmdOrCtrl+Z'},
+                {role: 'redo', label: 'Повторить', accelerator: 'Shift+CmdOrCtrl+Z'},
+                {type: 'separator'},
+                {role: 'cut', label: 'Вырезать', accelerator: 'CmdOrCtrl+X'},
+                {role: 'copy', label: 'Копировать', accelerator: 'CmdOrCtrl+C'},
+                {role: 'paste', label: 'Вставить', accelerator: 'CmdOrCtrl+V'},
+                {role: 'selectAll', label: 'Выделить всё', accelerator: 'CmdOrCtrl+A'}
+            ]
         }
-    }));
-    fsmenu.append(new MenuItem({
-        label: 'Отключить/включить звук',
-        click: () => {
-            mainWindow.webContents.audioMuted = (!mainWindow.webContents.audioMuted);
-        }
-    }));
-    fsmenu.append(new MenuItem({
-        label: 'Очистить кэш',
-        accelerator: 'CmdOrCtrl+D',
-        click: () => {
-            clearCache();
-        }
-    }));
-    fsmenu.append(new MenuItem({
-        label: 'Обновить страницу',
-        accelerator: 'F5',
-        click: () => {
-            reloadPage();
-        }
-    }));
-    // fsmenu.append(new MenuItem({
-    //   label: 'Инструменты разработчика',
-    // accelerator: 'F12',
-    //   click: () => {
-    //     mainWindow.webContents.toggleDevTools();
-    //   }
-    // }));
-    fsmenu.append(new MenuItem({
-        label: '', // Exit full screen
-        visible: false,
-        accelerator: 'Escape',
-        click: () => {
-            mainWindow.setFullScreen(false);
-            mainWindow.setMenuBarVisibility(true);
-        }
-    }));
+    ];
+
+    fsmenu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(fsmenu);
 }
 
 function clearCache() {
@@ -149,7 +171,6 @@ function createWindow() {
 app.on('ready', function () {
     createWindow();
     makeMenu();
-    Menu.setApplicationMenu(fsmenu);
 });
 
 app.on('window-all-closed', function () {
