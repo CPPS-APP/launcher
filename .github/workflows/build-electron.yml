@@ -15,31 +15,22 @@ jobs:
         include:
           - os: windows-latest
             script: build
-          - os: macos-13
+          - os: macos-15-intel
             script: build-mac
           - os: ubuntu-latest
             script: build-linux
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
 
-      - name: Install dependencies on macOS (force x64)
-        if: matrix.os == 'macos-13'
-        env:
-          npm_config_arch: x64
-        run: |
-          arch -x86_64 brew install coreutils || true
-          arch -x86_64 npm ci
-
-      - name: Install dependencies on Windows/Linux
-        if: matrix.os != 'macos-13'
+      - name: Install dependencies
         run: npm ci
 
       - name: Build Electron App (${{ matrix.os }})
