@@ -1,10 +1,29 @@
 const {app, BrowserWindow, dialog, Menu, MenuItem, screen} = require('electron');
 const isDev = require('electron-is-dev');
 const isDeveloperBuild = process.env.CPPS_DEV_BUILD === '1' || require('./package.json').cppsAppBuild === 'developer';
+const ALLOW_INSECURE = isDeveloperBuild ? true : false;
 const {autoUpdater} = require('electron-updater');
 const DiscordRPC = require('discord-rpc');
 const fs = require('fs');
 const path = require('path');
+
+app.on('certificate-error', (event, webContents, url, _error, _certificate, callback) => {
+    let hostname;
+    try {
+        hostname = new URL(url).hostname;
+    } catch (_parseError) {
+        callback(false);
+        return;
+    }
+
+    if (ALLOW_INSECURE && hostname === 'play.localhost') {
+        event.preventDefault();
+        callback(true);
+        return;
+    }
+
+    callback(false);
+});
 
 function isOSWin64() {
     return process.arch === 'x64' || process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432');
@@ -51,7 +70,7 @@ let adminWindow;
 let fsmenu;
 let exitFullscreenMenuItem;
 const productionSiteURL = 'https://play.cpps.app/';
-const localSiteURL = 'https://play.localhost/';
+const localSiteURL = 'https://play.localhost';
 let activeSiteURL = productionSiteURL;
 let usingLocalSite = false;
 let showingLoadError = false;
