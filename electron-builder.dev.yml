@@ -4,6 +4,13 @@ productName: CPPS.APP Desktop Dev
 directories:
   output: dist-dev
   buildResources: build
+files:
+  - main.js
+  - preload.js
+  - package.json
+  - icon.png
+  - flash/**/*
+  - build/**/*
 win:
   icon: icon.png
 mac:

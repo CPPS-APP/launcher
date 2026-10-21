@@ -33,6 +33,14 @@
     "appId": "com.cppsapp.desktop",
     "productName": "CPPS.APP Desktop",
     "asar": "false",
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "icon.png",
+      "flash/**/*",
+      "build/**/*"
+    ],
     "directories": {
       "buildResources": "build/icons"
     },
