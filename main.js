@@ -1,5 +1,6 @@
-const {app, BrowserWindow, dialog, Menu, MenuItem} = require('electron');
+const {app, BrowserWindow, dialog, Menu, MenuItem, screen} = require('electron');
 const isDev = require('electron-is-dev');
+const isDeveloperBuild = process.env.CPPS_DEV_BUILD === '1' || require('./package.json').cppsAppBuild === 'developer';
 const {autoUpdater} = require('electron-updater');
 const DiscordRPC = require('discord-rpc');
 const fs = require('fs');
@@ -46,10 +47,21 @@ app.commandLine.appendSwitch('ppapi-flash-path', path.join(__dirname, pluginName
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
+let adminWindow;
 let fsmenu;
 let exitFullscreenMenuItem;
-const siteURL = 'https://play.cpps.app/';
+const productionSiteURL = 'https://play.cpps.app/';
+const localSiteURL = 'http://play.localhost/';
+let activeSiteURL = productionSiteURL;
+let usingLocalSite = false;
 let showingLoadError = false;
+let lastWindowedBounds = null;
+let windowStateSaveTimer = null;
+
+if (isDeveloperBuild) {
+    app.setName('CPPS.APP Desktop Dev');
+    app.setPath('userData', path.join(app.getPath('appData'), 'CPPS.APP Desktop Dev'));
+}
 
 function showLoadError(errorCode) {
     if (!mainWindow) return;
@@ -93,7 +105,7 @@ function showLoadError(errorCode) {
     <main>
         <h1>Не удалось загрузить страницу!</h1>
         <p>${detail}</p>
-        <a class="retry" id="retry-button" href="${siteURL}" aria-live="polite">
+        <a class="retry" id="retry-button" href="${activeSiteURL}" aria-live="polite">
             <span id="retry-label">Попробовать снова</span><span class="retry-spinner" aria-hidden="true"></span>
         </a>
     </main>
@@ -130,6 +142,18 @@ function makeMenu() {
         );
     }
 
+    if (isDeveloperBuild) {
+        appSubmenu.push({
+            id: 'toggle-site-environment',
+            label: usingLocalSite ? 'Перейти на play.cpps.app' : 'Перейти на play.localhost',
+            click: () => toggleSiteEnvironment()
+        }, {type: 'separator'});
+        appSubmenu.push({
+            label: 'admin',
+            click: () => openAdminWindow()
+        }, {type: 'separator'});
+    }
+
     appSubmenu.push(
         {
             label: 'На полный экран',
@@ -160,8 +184,10 @@ function makeMenu() {
         {
             label: 'Инструменты разработчика',
             accelerator: 'F12',
+            visible: isDeveloperBuild || isDev,
             click: () => {
-                if (mainWindow) mainWindow.webContents.toggleDevTools();
+                const focusedWindow = BrowserWindow.getFocusedWindow();
+                if (focusedWindow) focusedWindow.webContents.toggleDevTools();
             }
         },
         {
@@ -217,7 +243,46 @@ function makeMenu() {
 
     fsmenu = Menu.buildFromTemplate(template);
     exitFullscreenMenuItem = fsmenu.getMenuItemById('exit-fullscreen');
+    if (exitFullscreenMenuItem && mainWindow) {
+        exitFullscreenMenuItem.visible = mainWindow.isFullScreen();
+    }
     Menu.setApplicationMenu(fsmenu);
+}
+
+function toggleSiteEnvironment() {
+    if (!isDeveloperBuild) return;
+
+    usingLocalSite = !usingLocalSite;
+    activeSiteURL = usingLocalSite ? localSiteURL : productionSiteURL;
+    makeMenu();
+    if (mainWindow) {
+        showingLoadError = false;
+        mainWindow.loadURL(activeSiteURL);
+    }
+}
+
+function openAdminWindow() {
+    if (adminWindow && !adminWindow.isDestroyed()) {
+        adminWindow.focus();
+        return;
+    }
+
+    adminWindow = new BrowserWindow({
+        width: 1200,
+        height: 900,
+        title: 'Загрузка...',
+        icon: path.join(__dirname, 'build/icon.png'),
+        backgroundColor: '#22a4f3',
+        webPreferences: {
+            contextIsolation: true,
+            nodeIntegration: false,
+            devTools: isDeveloperBuild || isDev
+        }
+    });
+    adminWindow.loadURL('https://secured.cpps.app/manager');
+    adminWindow.on('closed', () => {
+        adminWindow = null;
+    });
 }
 
 function clearCache() {
@@ -230,17 +295,97 @@ function reloadPage() {
     if (mainWindow !== null) {
         if (showingLoadError) {
             showingLoadError = false;
-            mainWindow.loadURL(siteURL);
+            mainWindow.loadURL(activeSiteURL);
         } else {
             mainWindow.webContents.reload();
         }
     }
 }
 
+function readWindowState() {
+    const displays = screen.getAllDisplays();
+    const maxWidth = Math.max(...displays.map(display => display.workArea.width));
+    const maxHeight = Math.max(...displays.map(display => display.workArea.height));
+    const state = {
+        width: Math.min(1225, maxWidth),
+        height: Math.min(823, maxHeight),
+        isMaximized: true
+    };
+
+    try {
+        const saved = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'window-state.json'), 'utf8'));
+        if (Number.isFinite(saved.width) && Number.isFinite(saved.height)
+            && saved.width >= 640 && saved.height >= 480) {
+            state.width = Math.min(saved.width, maxWidth);
+            state.height = Math.min(saved.height, maxHeight);
+            state.isMaximized = saved.isMaximized === true;
+
+            if (Number.isFinite(saved.x) && Number.isFinite(saved.y)) {
+                const visibleOnDisplay = displays.some(({workArea}) =>
+                    saved.x < workArea.x + workArea.width - 40
+                    && saved.x + state.width > workArea.x + 40
+                    && saved.y < workArea.y + workArea.height - 40
+                    && saved.y + state.height > workArea.y + 40
+                );
+                if (visibleOnDisplay) {
+                    state.x = saved.x;
+                    state.y = saved.y;
+                }
+            }
+        }
+    } catch (error) {
+        if (error.code !== 'ENOENT') console.warn('Could not restore window state:', error);
+    }
+
+    return state;
+}
+
+function writeWindowState() {
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isFullScreen()) return;
+
+    const state = {
+        ...(lastWindowedBounds || mainWindow.getBounds()),
+        isMaximized: mainWindow.isMaximized()
+    };
+
+    try {
+        fs.writeFileSync(path.join(app.getPath('userData'), 'window-state.json'), JSON.stringify(state));
+    } catch (error) {
+        console.warn('Could not save window state:', error);
+    }
+}
+
+function saveWindowState() {
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isFullScreen()) return;
+
+    if (!mainWindow.isMaximized()) lastWindowedBounds = mainWindow.getBounds();
+    if (windowStateSaveTimer) clearTimeout(windowStateSaveTimer);
+    windowStateSaveTimer = setTimeout(() => {
+        windowStateSaveTimer = null;
+        writeWindowState();
+    }, 150);
+}
+
+function flushWindowState() {
+    if (windowStateSaveTimer) {
+        clearTimeout(windowStateSaveTimer);
+        windowStateSaveTimer = null;
+    }
+    writeWindowState();
+}
+
 function createWindow() {
+    const restoredState = readWindowState();
+    const {isMaximized, ...windowBounds} = restoredState;
+    lastWindowedBounds = {
+        x: restoredState.x,
+        y: restoredState.y,
+        width: restoredState.width,
+        height: restoredState.height
+    };
+
     mainWindow = new BrowserWindow({
-        width: 1225,
-        height: 823,
+        ...windowBounds,
         title: 'Загрузка CPPS.APP...',
         icon: __dirname + '/build/icon.png',
         webPreferences: {
@@ -248,7 +393,7 @@ function createWindow() {
             plugins: true,
             contextIsolation: true,
             nodeIntegration: false,
-            devTools: isDev
+            devTools: isDeveloperBuild || isDev
         }
     });
 
@@ -262,7 +407,7 @@ function createWindow() {
     mainWindow.webContents.on('will-navigate', (_event, navigationURL) => {
         if (!navigationURL.startsWith('data:text/html')) showingLoadError = false;
     });
-    mainWindow.loadURL(siteURL);
+    mainWindow.loadURL(productionSiteURL);
 
     mainWindow.on('enter-full-screen', () => {
         if (exitFullscreenMenuItem) exitFullscreenMenuItem.visible = true;
@@ -270,6 +415,13 @@ function createWindow() {
     mainWindow.on('leave-full-screen', () => {
         if (exitFullscreenMenuItem) exitFullscreenMenuItem.visible = false;
     });
+    mainWindow.on('resize', saveWindowState);
+    mainWindow.on('move', saveWindowState);
+    mainWindow.on('maximize', saveWindowState);
+    mainWindow.on('unmaximize', saveWindowState);
+    mainWindow.on('close', flushWindowState);
+
+    if (isMaximized) mainWindow.maximize();
 
     const clientId = '1098494702644383766';
     DiscordRPC.register(clientId);
