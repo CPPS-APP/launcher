@@ -26,7 +26,6 @@
     "@electron/asar": "^4.0.0",
     "@electron/osx-sign": "^2.0.0",
     "discord-rpc": "^3.2.0",
-    "electron-icon-maker": "^0.0.5",
     "electron-is-dev": "^1.2.0",
     "electron-updater": "^6.6.2"
   },
