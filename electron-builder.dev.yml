@@ -1,0 +1,14 @@
+appId: com.cppsapp.desktop.dev
+asar: false
+productName: CPPS.APP Desktop Dev
+directories:
+  output: dist-dev
+  buildResources: build
+win:
+  icon: icon.png
+mac:
+  icon: icon.icns
+linux:
+  icon: icon.png
+extraMetadata:
+  cppsAppBuild: developer
