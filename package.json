@@ -1,6 +1,6 @@
 {
   "name": "CPPS.APP",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "CPPS.APP Desktop Client",
   "main": "main.js",
   "scripts": {
