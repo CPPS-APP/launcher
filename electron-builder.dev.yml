@@ -1,4 +1,5 @@
 appId: com.cppsapp.desktop.dev
+asar: false
 productName: CPPS.APP Desktop Dev
 directories:
   output: dist-dev

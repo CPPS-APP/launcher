@@ -33,7 +33,7 @@
   "build": {
     "appId": "com.cppsapp.desktop",
     "productName": "CPPS.APP Desktop",
-    "asar": "false",
+    "asar": "true",
     "directories": {
       "buildResources": "build/icons"
     },
